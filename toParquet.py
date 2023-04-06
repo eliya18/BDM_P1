@@ -2,6 +2,8 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import input_file_name
 
 
+## Converting CSV and JSON files to Parquet format and reading Parquet files.
+
 def from_csv_to_parquet(folder, output_folder):
     spark = SparkSession.builder.appName("Transform CSV to Parquet").getOrCreate()
     # Load the CSV files into a DataFrame
@@ -29,9 +31,18 @@ def read_parquet_file(file):
     spark.stop()
 
 
-from_csv_to_parquet('/Users/opendata-rent/',
-                   '/Users/output/opendata-rent')
+# from_csv_to_parquet('/Users/opendata-rent/',
+#                    '/Users/output/opendata-rent')
 
-from_json_to_parquet('/Users/idealista/',
-                    '/Users/idealista')
-read_parquet_file('/Users/output/idealista/filename=file%3A%2F%2F%2FUsers%2Fximenamoure%2FDesktop%2Fdata%2Fidealista%2F2020_01_08_idealista.json/part-00005-5b90cb7e-30d8-41f3-8043-2825ee3f9b00.c000.snappy.parquet')
+from_csv_to_parquet('/Users/miona.dimic/Desktop/MDS/Q2 2023/BDM/Project/BDM_P1/data/opendata-rent', '/Users/miona.dimic/Desktop/MDS/Q2 2023/BDM/Project/BDM_P1/data/parquet_formats/opendata-rent')
+
+# from_json_to_parquet('/Users/idealista/',
+#                     '/Users/idealista')
+
+from_json_to_parquet('/Users/miona.dimic/Desktop/MDS/Q2 2023/BDM/Project/BDM_P1/data/idealista', '/Users/miona.dimic/Desktop/MDS/Q2 2023/BDM/Project/BDM_P1/data/parquet_formats/idealista')
+
+# Taking randomly one file to test function
+
+## read_parquet_file('/Users/output/idealista/filename=file%3A%2F%2F%2FUsers%2Fximenamoure%2FDesktop%2Fdata%2Fidealista%2F2020_01_08_idealista.json/part-00005-5b90cb7e-30d8-41f3-8043-2825ee3f9b00.c000.snappy.parquet')
+
+## read_parquet_file('/Users/miona.dimic/Desktop/MDS/Q2 2023/BDM/Project/BDM_P1/data/parquet_formats/idealista/filename=file%3A%2F%2F%2FUsers%2Fmiona.dimic%2FDesktop%2FMDS%2FQ2%25202023%2FBDM%2FProject%2FBDM_P1%2Fdata%2Fidealista%2F2021_01_13_idealista.json')

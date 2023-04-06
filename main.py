@@ -2,6 +2,9 @@ import paramiko
 from dotenv import load_dotenv
 import os
 
+## Transferring files from a local machine to a remote server over SSH
+
+
 load_dotenv()
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -9,7 +12,7 @@ ssh.connect(os.getenv('MACHINE_IP'), username=os.getenv('USER_NAME'), password=o
 # stdin, stdout, stderr = ssh.exec_command('ls')
 
 local_folders = os.getenv('LOCAL_DATA_SOURCES').split(',')
-print(local_folders)
+print("Local folders : "  + str(local_folders))
 sftp = ssh.open_sftp()
 
 for i in local_folders:
