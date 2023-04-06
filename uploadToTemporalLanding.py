@@ -4,8 +4,21 @@ import posixpath as psp
 
 hdfs_cli = InsecureClient('http://10.4.41.48:9870', user='bdm')
 
+# Uploading everything from a local data folder (idealista, lookup tables, opendata) to a folder called temporal_landing in HDFS
 
-# just testing to list all files in a directory
+
+def delete_hdfs_directory(dir_name):
+    if not hdfs_cli.status(dir_name, strict=False):
+        print(f"The folder {dir_name} does not exist.")
+        return
+    for root, dirs, files in hdfs_cli.walk(dir_name):
+        for file in files:
+            hdfs_cli.delete(os.path.join(root, file))
+    hdfs_cli.delete(dir_name, recursive=True)
+    print(f"The folder {dir_name} was deleted.")
+
+
+# List all files that are in local directory
 def local_files(dir_name):
     all_files = []
     for root, dirs, files in os.walk(dir_name):
@@ -17,7 +30,7 @@ def local_files(dir_name):
     return all_files
 
 
-# just testing to look what directories are in hdfs
+# List directories are in hdfs
 def hdfs_files(dir_name):
     if hdfs_cli.status(dir_name, strict=False):
         print('Directory already exists, so continue')
@@ -39,12 +52,24 @@ def progress_callback(file_name, bytes_uploaded):
         print(f"Uploaded {bytes_uploaded} for file {file_name}")
 
 
-# this uploads all the stuff in the local folder (idealista, lookup tables, opendata) to a folder called
-# temporal_landing in hdfs
-# first parameter is the path in the virtual machine for hdfs and
-# the second on is the local folder where all the data is
-hdfs_cli.upload('/user/bdm/temporal_landing', '/Users/Desktop/data/', progress=progress_callback,
+# For testing : delete hdfs directory if previosly created
+delete_hdfs_directory('/user/bdm/temporal_landing')
+
+
+# hdfs_cli.upload() uploads all the stuff from the local folder (idealista, lookup tables, opendata) to a folder called temporal_landing in hdfs
+# first parameter is the path in the virtual machine for hdfs and the second one is the local folder where all the data is
+
+# hdfs_cli.upload('/user/bdm/temporal_landing', '/Users/Desktop/data/', progress=progress_callback,
+#                 overwrite=True)
+
+hdfs_cli.upload('/user/bdm/temporal_landing', '/Users/miona.dimic/Desktop/MDS/Q2 2023/BDM/Project/BDM_P1/data/', progress=progress_callback,
                 overwrite=True)
 
+
+# show hdfs and local files
+print("Files in HDFS: ")
 hdfs_files('/user/bdm/temporal_landing')
 # local_files('/Users/Desktop/data/')
+#local_files('/Users/miona.dimic/Desktop/MDS/Q2 2023/BDM/Project/BDM_P1/data/')
+
+
