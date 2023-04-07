@@ -67,8 +67,8 @@ hdfs_cli.upload('/user/bdm/persistant_landing', '/Users/miona.dimic/Desktop/MDS/
 
 
 # # show hdfs and local files
-print("Files in HDFS: ")
-hdfs_files('/user/bdm/persistant_landing')
+#print("Files in HDFS: ")
+#hdfs_files('/user/bdm/persistant_landing')
 
 # local_files('/Users/miona.dimic/Desktop/MDS/Q2 2023/BDM/Project/BDM_P1/data/parquet_formats/')
 

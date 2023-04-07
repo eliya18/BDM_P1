@@ -1,6 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import input_file_name
-
+import os
+import shutil
 
 ## Converting CSV and JSON files to Parquet format and reading Parquet files.
 
@@ -31,6 +32,29 @@ def read_parquet_file(file):
     spark.stop()
 
 
+def delete_directory(path):
+    """
+    Deletes a directory and all its contents if it exists.
+    """
+    if os.path.exists(path):
+        try:
+            # Remove read-only flag if it exists
+            os.chmod(path, 0o777)
+        
+            # Remove the directory and all its contents
+            shutil.rmtree(path)
+            print(f"Successfully deleted existing directory: {path}")
+        except Exception as e:
+            print(f"Error deleting directory: {e}")
+    else:
+        print(f"Directory does not exist: {path}")
+
+
+# deletes parquet_formats folder
+delete_directory('/Users/miona.dimic/Desktop/MDS/Q2 2023/BDM/Project/BDM_P1/data/parquet_formats')
+
+
+
 # from_csv_to_parquet('/Users/opendata-rent/',
 #                    '/Users/output/opendata-rent')
 
@@ -40,6 +64,15 @@ from_csv_to_parquet('/Users/miona.dimic/Desktop/MDS/Q2 2023/BDM/Project/BDM_P1/d
 #                     '/Users/idealista')
 
 from_json_to_parquet('/Users/miona.dimic/Desktop/MDS/Q2 2023/BDM/Project/BDM_P1/data/idealista', '/Users/miona.dimic/Desktop/MDS/Q2 2023/BDM/Project/BDM_P1/data/parquet_formats/idealista')
+
+
+
+from_csv_to_parquet('/Users/miona.dimic/Desktop/MDS/Q2 2023/BDM/Project/BDM_P1/data/lookup_tables', '/Users/miona.dimic/Desktop/MDS/Q2 2023/BDM/Project/BDM_P1/data/parquet_formats/lookup_tables')
+from_csv_to_parquet('/Users/miona.dimic/Desktop/MDS/Q2 2023/BDM/Project/BDM_P1/data/opendatabcn-income', '/Users/miona.dimic/Desktop/MDS/Q2 2023/BDM/Project/BDM_P1/data/parquet_formats/opendatabcn-income')
+
+
+
+
 
 # Taking randomly one file to test function
 
