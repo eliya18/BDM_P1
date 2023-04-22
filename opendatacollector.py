@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-## Download CSV files from a website and save them to a local directory
+## Downloads CSV files from opendata and saves them to a local directory
 
 async def get_csv_links(url):
     browser = await launch()

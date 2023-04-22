@@ -1,11 +1,16 @@
 from hdfs import InsecureClient
 import os
 import posixpath as psp
+from dotenv import load_dotenv
 
-hdfs_cli = InsecureClient('http://10.4.41.48:9870', user='bdm')
+load_dotenv()
 
 # Uploading everything from a local data folder (idealista, lookup tables, opendata) to a folder called temporal_landing in HDFS
 
+local_path = os.getenv("LOCAL_DATA_PATH")
+temporal_landing=os.getenv("TEMPORAL_LANDING")
+
+hdfs_cli = InsecureClient('http://10.4.41.48:9870', user='bdm')
 
 def delete_hdfs_directory(dir_name):
     if not hdfs_cli.status(dir_name, strict=False):
@@ -25,12 +30,10 @@ def local_files(dir_name):
         for file in files:
             full_path = os.path.join(root, file)
             all_files.append(full_path)
-    # print("length", len(all_files))
-    # print(all_files)
     return all_files
 
 
-# List directories are in hdfs
+# List directories  in hdfs
 def hdfs_files(dir_name):
     if hdfs_cli.status(dir_name, strict=False):
         print('Directory already exists, so continue')
@@ -44,33 +47,17 @@ def hdfs_files(dir_name):
                for f_name in f_names]
     return f_paths, f_formats
 
-
-
 def progress_callback(file_name, bytes_uploaded):
     if bytes_uploaded == -1:
         print(f"Finished uploading file {file_name}")
     else:
         print(f"Uploaded {bytes_uploaded} for file {file_name}")
 
-
-# For testing : delete hdfs directory if previosly created
-delete_hdfs_directory('/user/bdm/temporal_landing')
-
-
-# hdfs_cli.upload() uploads all the stuff from the local folder (idealista, lookup tables, opendata) to a folder called temporal_landing in hdfs
+# uploads all the files from the local folder (idealista, lookup tables, opendata) to a folder called temporal_landing in hdfs
 # first parameter is the path in the virtual machine for hdfs and the second one is the local folder where all the data is
 
-# hdfs_cli.upload('/user/bdm/temporal_landing', '/Users/Desktop/data/', progress=progress_callback,
-#                 overwrite=True)
+hdfs_cli.upload(temporal_landing, local_path, progress=progress_callback,overwrite=True)
 
-hdfs_cli.upload('/user/bdm/temporal_landing', '/Users/miona.dimic/Desktop/MDS/Q2 2023/BDM/Project/BDM_P1/data/', progress=progress_callback,
-             overwrite=True)
-
-
-# show hdfs and local files
-# print("Files in HDFS: ")
-hdfs_files('/user/bdm/temporal_landing')
-# # local_files('/Users/Desktop/data/')
-# #local_files('/Users/miona.dimic/Desktop/MDS/Q2 2023/BDM/Project/BDM_P1/data/')
-
+# For testing : delete hdfs directory if previously created
+#delete_hdfs_directory('/user/bdm/temporal_landing')
 
