@@ -4,6 +4,7 @@ import pyarrow as pa
 import pandas as pd
 import io
 import os
+import datetime
 
 # HDFS paths
 temp_dir_name = '/user/bdm/temporal_landing'
@@ -13,6 +14,8 @@ perm_dir_name = '/user/bdm/persistent_landing'
 # Connect to HDFS using InsecureClient
 hdfs_cli = InsecureClient('http://10.4.41.48:9870', user='bdm')
 
+def getTimestamp():
+    return int(datetime.datetime.utcnow().timestamp())
 
 def delete_hdfs_directory(dir_name):
     if not hdfs_cli.status(dir_name, strict=False):
@@ -34,6 +37,7 @@ subdirs = [f"{temp_dir_name}/{name}" for name in hdfs_cli.list(temp_dir_name) if
 # Loop over subdirectories and convert files to Parquet
 for subdir in subdirs:
     # Get list of files in subdirectory
+    timestamp = getTimestamp()
     files = [f"{subdir}/{name}" for name in hdfs_cli.list(subdir)]
     
     # Create corresponding subdirectory in new empty HDFS directory
@@ -49,7 +53,7 @@ for subdir in subdirs:
             
             # Convert data to Parquet format
             table = pa.Table.from_pandas(json_data)
-            output_file = f"{perm_subdir}/{os.path.basename(file).replace('.json', '.parquet')}"
+            output_file = f"{perm_subdir}/{os.path.basename(file).replace('.json', '')}_{timestamp}.parquet"
             buffer = pa.BufferOutputStream()
             pq.write_table(table, buffer, compression='snappy', use_dictionary=True, version='2.6')
             
@@ -64,7 +68,7 @@ for subdir in subdirs:
             
             # Convert data to Parquet format
             table = pa.Table.from_pandas(csv_data)
-            output_file = f"{perm_subdir}/{os.path.basename(file).replace('.csv', '.parquet')}"
+            output_file = f"{perm_subdir}/{os.path.basename(file).replace('.csv', '')}_{timestamp}.parquet"
             buffer = pa.BufferOutputStream()
             pq.write_table(table, buffer, compression='snappy', use_dictionary=True, version='2.6')
             
