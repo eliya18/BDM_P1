@@ -1,13 +1,17 @@
 from hdfs import InsecureClient
+import pyarrow.parquet as pq
+import pyarrow as pa
+import pandas as pd
+import io
 import os
-import posixpath as psp
 
-# # Converting all files to Parquet format and uploading them from a local data folder parquet_formats to a folder called persistant_landing in HDFS
+# HDFS paths
+temp_dir_name = '/user/bdm/temporal_landing'
+perm_dir_name = '/user/bdm/persistent_landing'
 
-exec(open('toParquet.py').read())
 
+# Connect to HDFS using InsecureClient
 hdfs_cli = InsecureClient('http://10.4.41.48:9870', user='bdm')
-
 
 
 def delete_hdfs_directory(dir_name):
@@ -21,55 +25,55 @@ def delete_hdfs_directory(dir_name):
     print(f"The folder {dir_name} was deleted.")
 
 
-# List all files that are in local directory
-def local_files(dir_name):
-    all_files = []
-    for root, dirs, files in os.walk(dir_name):
-        for file in files:
-            full_path = os.path.join(root, file)
-            all_files.append(full_path)
-    print("length", len(all_files))
-    print(all_files)
-    return all_files
+
+delete_hdfs_directory(perm_dir_name)
+print("Creating persistant_landing.....")
+
+# Get list of subdirectories in temporary HDFS directory
+subdirs = [f"{temp_dir_name}/{name}" for name in hdfs_cli.list(temp_dir_name) if hdfs_cli.status(f"{temp_dir_name}/{name}")['type'] == 'DIRECTORY']
+# Loop over subdirectories and convert files to Parquet
+for subdir in subdirs:
+    # Get list of files in subdirectory
+    files = [f"{subdir}/{name}" for name in hdfs_cli.list(subdir)]
+    
+    # Create corresponding subdirectory in new empty HDFS directory
+    perm_subdir = f"{perm_dir_name}/{subdir[len(temp_dir_name):]}"
+    hdfs_cli.makedirs(perm_subdir, permission=777)
+
+    for file in files:
+        # Check if file is in json format
+        if file.endswith('.json'):
+            # Read data from file
+            with hdfs_cli.read(file) as reader:
+                json_data = pd.read_json(io.BytesIO(reader.read()), orient='records')
+            
+            # Convert data to Parquet format
+            table = pa.Table.from_pandas(json_data)
+            output_file = f"{perm_subdir}/{os.path.basename(file).replace('.json', '.parquet')}"
+            buffer = pa.BufferOutputStream()
+            pq.write_table(table, buffer, compression='snappy', use_dictionary=True, version='2.6')
+            
+            # Write Parquet file buffer to HDFS
+            with hdfs_cli.write(output_file) as writer:
+                writer.write(buffer.getvalue())
+    
+        elif file.endswith('.csv'):
+            # Read data from CSV file
+            with hdfs_cli.read(file) as reader:
+                csv_data = pd.read_csv(io.BytesIO(reader.read()))
+            
+            # Convert data to Parquet format
+            table = pa.Table.from_pandas(csv_data)
+            output_file = f"{perm_subdir}/{os.path.basename(file).replace('.csv', '.parquet')}"
+            buffer = pa.BufferOutputStream()
+            pq.write_table(table, buffer, compression='snappy', use_dictionary=True, version='2.6')
+            
+            # Write Parquet file buffer to HDFS
+            with hdfs_cli.write(output_file) as writer:
+                writer.write(buffer.getvalue())
+
+print("\nPersistant zone has been successfully populated.")
 
 
-# List directories are in hdfs
-def hdfs_files(dir_name):
-    if hdfs_cli.status(dir_name, strict=False):
-        print('Directory already exists, so continue')
-    else:
-        print(f"The folder {dir_name} does not exist.")
-        hdfs_cli.makedirs(dir_name)
-        print(f"The folder {dir_name} was created.")
-    f_paths = [psp.join(dpath, f_name)
-               for dpath, _, f_names in hdfs_cli.walk(dir_name)
-               for f_name in f_names]
-    print(f_paths)
-    return f_paths
-
-
-def progress_callback(file_name, bytes_uploaded):
-    if bytes_uploaded == -1:
-        print(f"Finished uploading file {file_name}")
-    else:
-        print(f"Uploaded {bytes_uploaded} for file {file_name}")
-
-
-# For testing : delete hdfs directory if previosly created
-delete_hdfs_directory('/user/bdm/persistant_landing')
-
-
-# # hdfs_cli.upload() uploads all the stuff from the local folder (idealista, lookup tables, opendata) to a folder called persistant_landing in hdfs
-# # first parameter is the path in the virtual machine for hdfs and the second one is the local folder where all the data is
-
-hdfs_cli.upload('/user/bdm/persistant_landing', '/Users/miona.dimic/Desktop/MDS/Q2 2023/BDM/Project/BDM_P1/data/parquet_formats/', progress=progress_callback,
-                overwrite=True)
-
-
-# # show hdfs and local files
-#print("Files in HDFS: ")
-#hdfs_files('/user/bdm/persistant_landing')
-
-# local_files('/Users/miona.dimic/Desktop/MDS/Q2 2023/BDM/Project/BDM_P1/data/parquet_formats/')
 
 
