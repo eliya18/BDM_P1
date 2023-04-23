@@ -5,16 +5,19 @@ import pandas as pd
 import io
 import os
 import datetime
+from dotenv import load_dotenv
 
+load_dotenv()
 # HDFS paths
-temp_dir_name = '/user/bdm/temporal_landing'
-perm_dir_name = '/user/bdm/persistent_landing'
+temp_dir_name = os.getenv("TEMPORAL_LANDING")
+perm_dir_name = os.getenv("PERSISTENT_LANDING")
 
-
+host= "http://"+os.getenv("MACHINE_IP")+":"+os.getenv("MACHINE_PORT")
+user_name=os.getenv("USER_NAME")
 # Connect to HDFS using InsecureClient
-hdfs_cli = InsecureClient('http://10.4.41.48:9870', user='bdm')
+hdfs_cli = InsecureClient(host, user=user_name)
 
-def getTimestamp():
+def get_timestamp():
     return int(datetime.datetime.utcnow().timestamp())
 
 def delete_hdfs_directory(dir_name):
@@ -137,7 +140,7 @@ subdirs = [f"{temp_dir_name}/{name}" for name in hdfs_cli.list(temp_dir_name) if
 # Loop over subdirectories and convert files to Parquet
 for subdir in subdirs:
     # Get list of files in subdirectory
-    timestamp = getTimestamp()
+    timestamp = get_timestamp()
     files = [f"{subdir}/{name}" for name in hdfs_cli.list(subdir)]
     
     # Create corresponding subdirectory in new empty HDFS directory

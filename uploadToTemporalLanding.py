@@ -9,8 +9,9 @@ load_dotenv()
 
 local_path = os.getenv("LOCAL_DATA_PATH")
 temporal_landing=os.getenv("TEMPORAL_LANDING")
-
-hdfs_cli = InsecureClient('http://10.4.41.48:9870', user='bdm')
+host= "http://"+os.getenv("MACHINE_IP")+":"+os.getenv("MACHINE_PORT")
+user_name=os.getenv("USER_NAME")
+hdfs_cli = InsecureClient(host, user=user_name)
 
 def delete_hdfs_directory(dir_name):
     if not hdfs_cli.status(dir_name, strict=False):
